@@ -205,9 +205,92 @@ h3 { font-size: 1.25rem; letter-spacing: -0.01em; }
   border-radius: 999px;
   font-weight: 600 !important;
 }
+/* ---------- mobile menu (hamburger) ---------- */
+
+.nav-toggle { display: none; }
+.nav-menu { display: none; }
+
 @media (max-width: 720px) {
   .nav-links a:not(.nav-cta) { display: none; }
+  .nav-links { gap: 10px; }
+
+  .nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    margin-left: 2px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--ink);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nav-toggle svg { width: 20px; height: 20px; display: block; }
+  .nav-toggle .icon-close { display: none; }
+  .nav-toggle[aria-expanded="true"] .icon-open { display: none; }
+  .nav-toggle[aria-expanded="true"] .icon-close { display: block; }
+  .nav-toggle[aria-expanded="true"] { border-color: var(--navy); }
+
+  /* panel hangs off the sticky bar, so opening it never reflows the page */
+  .nav-menu {
+    display: block;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    /* white, not cream, so the panel reads as a layer above the page */
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 18px 32px var(--shadow-md);
+    max-height: calc(100vh - 64px);
+    overflow-y: auto;
+  }
+  .nav-menu[hidden] { display: none; }
+  .nav-menu .container { padding-top: 6px; padding-bottom: 18px; }
+
+  .nav-menu a {
+    display: block;
+    padding: 13px 2px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-menu a:last-child { border-bottom: 0; }
+  .nav-menu a:active { color: var(--muted); }
+  .nav-menu a[aria-current="page"] { color: var(--muted); }
+
+  .nav-menu .menu-label {
+    padding: 16px 2px 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .nav-menu .menu-secondary a {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--muted);
+    padding: 11px 2px;
+  }
 }
+
+/* original-SE widths: buy back room so Download can't collide with the brand */
+@media (max-width: 360px) {
+  .nav-cta { padding: 8px 13px; font-size: 0.92rem; }
+  .brand { font-size: 0.98rem; }
+  .brand img { width: 26px; height: 26px; }
+}
+
+/* keep the sticky nav from sitting on top of a jumped-to heading */
+section[id] { scroll-margin-top: 88px; }
+@media (max-width: 720px) { section[id] { scroll-margin-top: 76px; } }
 
 /* ---------- sections ---------- */
 
@@ -803,6 +886,23 @@ footer .brand img { border-radius: 7px; }
         <a href="terms.html">Terms</a>
         <a href="support.html">Support</a>
       </div>
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <svg class="icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+    </div>
+    <div class="nav-menu" id="mobile-menu" hidden>
+      <div class="container">
+        <a href="index.html">Home</a>
+        <a href="index.html#how">How it works</a>
+        <a href="index.html#faq">FAQ</a>
+        <div class="menu-label">Legal &amp; help</div>
+        <div class="menu-secondary">
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="support.html" aria-current="page">Support</a>
+        </div>
+      </div>
     </div>
   </nav>
 
@@ -930,6 +1030,34 @@ footer .brand img { border-radius: 7px; }
       </div>
     </div>
   </footer>
+
+  <script>
+  (function () {
+    var btn  = document.querySelector('.nav-toggle');
+    var menu = document.getElementById('mobile-menu');
+    if (!btn || !menu) return;
+
+    function setOpen(open) {
+      btn.setAttribute('aria-expanded', String(open));
+      btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+      menu.hidden = !open;
+    }
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setOpen(btn.getAttribute('aria-expanded') !== 'true');
+    });
+    // tapping a destination, tapping away, or Esc all close it
+    menu.addEventListener('click', function (e) { if (e.target.closest('a')) setOpen(false); });
+    document.addEventListener('click', function (e) {
+      if (!menu.hidden && !menu.contains(e.target) && !btn.contains(e.target)) setOpen(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); }
+    });
+    // never leave it stuck open when the desktop nav takes over
+    addEventListener('resize', function () { if (innerWidth > 720 && !menu.hidden) setOpen(false); });
+  })();
+  </script>
 
 </body>
 </html>
